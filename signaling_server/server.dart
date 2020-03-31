@@ -19,15 +19,20 @@ Future<void> requestHandler(HttpRequest request) async {
 }
 
 void addNewClient(WebSocket webSocket) {
+  print('newClient');
+
   _webSockets.add(webSocket);
   webSocket.listen((data) => broadcastToAll(webSocket, data), onDone: () => dropClient(webSocket));
 }
 
 void dropClient(WebSocket webSocket) {
+  print('dropClient');
+
   _webSockets.remove(webSocket);
 }
 
 void broadcastToAll(WebSocket webSocket, dynamic data) {
+  print('broadcast: $data');
   _webSockets.forEach((ws) {
     if (webSocket != ws) {
       ws.add(data);

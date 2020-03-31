@@ -30,8 +30,6 @@ class RtcClient {
       ]
     });
 
-    _dataChannel = await _createDataChannel();
-
     _peerConnection.onIceCandidate = _onCandidate;
     _peerConnection.onDataChannel = _onDataChannel;
     _peerConnection.onRenegotiationNeeded = _onNegotiationNeeded;
@@ -48,6 +46,8 @@ class RtcClient {
   }
 
   Future<void> offer() async {
+    _dataChannel = await _createDataChannel();
+
     var offer = await _peerConnection.createOffer(constraints);
     print('offer: ${offer.sdp}');
 
@@ -61,6 +61,16 @@ class RtcClient {
     _sendSignal({'type': 'answer', 'payload': answer.toMap()});
   }
 
+  Future<void> ping() async {
+    print('sentPing');
+    await _sendChannelData({'type': 'ping'});
+  }
+
+  Future<void> close() async {
+    await _peerConnection.close();
+    _signalWs.close();
+  }
+
   Future<void> _onCandidate(RTCIceCandidate iceCandidate) async {
     print('iceCandidate: ${iceCandidate.candidate}');
     _sendSignal({
@@ -71,6 +81,9 @@ class RtcClient {
 
   Future<void> _onDataChannel(RTCDataChannel dataChannel) async {
     print('dataChannel: $dataChannel');
+    _dataChannel = dataChannel;
+
+    dataChannel.messageStream.listen(_onDataChannelMessage);
   }
 
   Future<void> _onNegotiationNeeded() async {
@@ -82,19 +95,15 @@ class RtcClient {
     _signalWs.send(jsonEncode(data));
   }
 
+  Future<void> _sendChannelData(Map<String, dynamic> data) async {
+    await _dataChannel.send(RTCDataChannelMessage(jsonEncode(data)));
+  }
+
   Future<RTCDataChannel> _createDataChannel() async {
     var dataChannelConfig = RTCDataChannelInit();
     var dataChannel = await _peerConnection.createDataChannel(
         'dataChannel', dataChannelConfig);
-    dataChannel.onDataChannelState = (state) async {
-      print(state.toString());
-      if (state == RTCDataChannelState.RTCDataChannelOpen) {
-        await dataChannel.send(RTCDataChannelMessage('test'));
-      }
-    };
-    dataChannel.onMessage = (message) async {
-      print('dataChannel onMessage: ${message.text}');
-    };
+    dataChannel.messageStream.listen(_onDataChannelMessage);
 
     return dataChannel;
   }
@@ -105,20 +114,30 @@ class RtcClient {
     var payload = data['payload'];
 
     if (data['type'] == 'offer') {
-      await _peerConnection.setRemoteDescription(convertMapToSession(payload));
+      await _peerConnection.setRemoteDescription(_convertMapToSession(payload));
       await answer();
     } else if (data['type'] == 'answer') {
-      await _peerConnection.setRemoteDescription(convertMapToSession(payload));
+      await _peerConnection.setRemoteDescription(_convertMapToSession(payload));
     } else if (data['type'] == 'iceCandidate') {
-      await _peerConnection.addCandidate(convertMapToCandidate(payload));
+      await _peerConnection.addCandidate(_convertMapToCandidate(payload));
     }
   }
 
-  RTCSessionDescription convertMapToSession(Map<String, dynamic> map) {
+  Future<void> _onDataChannelMessage(RTCDataChannelMessage message) async {
+    print('dataChannelRaw: ${message.text}');
+    var data = jsonDecode(message.text);
+    print('dataChannelDecode: $data');
+
+    if (data['type'] == 'ping') {
+      await _sendChannelData({'type': 'pong'});
+    }
+  }
+
+  RTCSessionDescription _convertMapToSession(Map<String, dynamic> map) {
     return RTCSessionDescription(map['sdp'], map['type']);
   }
 
-  RTCIceCandidate convertMapToCandidate(Map<String, dynamic> map) {
+  RTCIceCandidate _convertMapToCandidate(Map<String, dynamic> map) {
     return RTCIceCandidate(map['candidate'], map['sdpMid'], map['sdpMLineIndex']);
   }
 }

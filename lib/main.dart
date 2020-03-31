@@ -9,7 +9,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'F2F',
+      title: 'face2face',
       theme: ThemeData(
         primarySwatch: Colors.pink,
       ),
@@ -28,14 +28,26 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  RtcClient client = new RtcClient();
+  RtcClient _client = new RtcClient();
+  bool _initialized = false;
 
   Future<void> _initCall() async {
-    await client.create();
+    if (_initialized) {
+      await _client.close();
+    }
+
+    await _client.create();
+    setState(() {
+      _initialized = true;
+    });
   }
 
   Future<void> _startOffer() async {
-    await client.offer();
+    await _client.offer();
+  }
+
+  Future<void> _ping() async {
+    await _client.ping();
   }
 
   @override
@@ -52,17 +64,23 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Text(
                 'Init Call'
               ),
-              onPressed: _initCall,
+              onPressed: _initialized ? null : _initCall,
             ),
             FlatButton(
               child: Text(
                 'Offer'
               ),
               onPressed: _startOffer,
-            )
+            ),
+            FlatButton(
+              child: Text(
+                'Ping'
+              ),
+              onPressed: _ping,
+            ),
           ],
         ),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      ),
     );
   }
 }
