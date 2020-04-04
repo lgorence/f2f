@@ -10,7 +10,7 @@ Future<String> createRoom() async {
   /*var request = await HttpClient().getUrl(Uri.parse('http://localhost:8888/createRoom'));
   var response = await request.close();
   return response.transform(utf8.decoder).join();*/
-  return html.HttpRequest.getString('http://localhost:8888/createRoom');
+  return html.HttpRequest.getString('https://signal.prod.f2f.gorence.io/createRoom');
 }
 
 class RtcClient {
@@ -35,7 +35,7 @@ class RtcClient {
       onLocalStream(_localStream);
     }
 
-    _signalWs = new html.WebSocket('ws://localhost:8888/ws?roomId=$roomId');
+    _signalWs = new html.WebSocket('wss://signal.prod.f2f.gorence.io/ws?roomId=$roomId');
     _signalWs.onMessage.listen(_onSignalMessage);
 
     _peerConnection = await createPeerConnection({

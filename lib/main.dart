@@ -137,8 +137,8 @@ class _InCallPageState extends State<InCallPage> {
         context: context,
         //child:
         child: AlertDialog(
-          content: SelectableText(
-              'Room ID (give this to your meeting partner): $roomId'),
+          content: Text(
+              'Room ID (give this to your meeting partner):\n$roomId'),
           actions: <Widget>[
             FlatButton(
               child: Text('Close'),
