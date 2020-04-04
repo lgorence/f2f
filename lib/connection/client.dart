@@ -31,9 +31,6 @@ class RtcClient {
 
   Future<void> join(String roomId) async {
     _localStream = await _createLocalStream();
-    if (onLocalStream != null) {
-      onLocalStream(_localStream);
-    }
 
     _signalWs = new html.WebSocket('wss://signal.prod.f2f.gorence.io/ws?roomId=$roomId');
     _signalWs.onMessage.listen(_onSignalMessage);
@@ -123,9 +120,6 @@ class RtcClient {
     if (stream.id != _localStream.id && onRemoteStream != null) {
       onRemoteStream(stream);
     }
-    // TODO: for some reason when we call onRemoteStream above, in our widget
-    // it overwrites the local stream that's already there, so we call it again,
-    // and this fixes it. *shrug*
     if (onLocalStream != null) {
       onLocalStream(_localStream);
     }

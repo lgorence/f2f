@@ -1,8 +1,6 @@
 import 'package:f2f/connection/client.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/webrtc.dart';
-import 'package:flutter_webrtc/rtc_video_view.dart'
-    if (dart.library.js) 'package:flutter_webrtc/web/rtc_video_view.dart';
 
 void main() {
   runApp(Face2FaceApp());
@@ -98,13 +96,24 @@ class _InCallPageState extends State<InCallPage> {
   RtcClient _client = new RtcClient();
   bool _initialized = false;
   bool _muted = false;
-  RTCVideoRenderer _localRenderer = RTCVideoRenderer();
+  RTCVideoRenderer _localRenderer = RTCVideoRenderer(forceMute: true);
   RTCVideoRenderer _remoteRenderer = RTCVideoRenderer();
 
   @override
   void initState() {
     super.initState();
     joinRoom(widget.roomId, widget.showRoomIdPrompt);
+
+    _localRenderer.onStateChanged = () {
+      _muteLocal();
+    };
+  }
+
+  void _muteLocal() {
+    if (WebRTC.platformIsWeb) {
+      print('muted renderer');
+      _localRenderer.isMuted = true;
+    }
   }
 
   Future<void> joinRoom(String roomId, bool showRoomIdPrompt) async {
@@ -115,16 +124,12 @@ class _InCallPageState extends State<InCallPage> {
     _client.onLocalStream = (stream) {
       print('newLocalStream: ${stream.id}');
       _localRenderer.srcObject = stream;
-      _localRenderer.onStateChanged = () {
-        if (WebRTC.platformIsWeb) {
-          print('muted renderer');
-          _localRenderer.isMuted = true;
-        }
-      };
+      _muteLocal();
     };
     _client.onRemoteStream = (stream) {
       print('newRemoteStream: ${stream.id}');
       _remoteRenderer.srcObject = stream;
+      _muteLocal();
     };
 
     await _client.join(roomId);
@@ -135,7 +140,6 @@ class _InCallPageState extends State<InCallPage> {
     if (showRoomIdPrompt) {
       showDialog(
         context: context,
-        //child:
         child: AlertDialog(
           content: Text(
               'Room ID (give this to your meeting partner):\n$roomId'),
@@ -192,6 +196,9 @@ class _InCallPageState extends State<InCallPage> {
         ],
       ),
       body: Container(
+        decoration: BoxDecoration(
+          color: Colors.black,
+        ),
         //width: 500,
         //height: 500,
         child: RTCVideoView(_remoteRenderer),
