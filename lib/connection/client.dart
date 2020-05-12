@@ -6,11 +6,7 @@ import 'package:flutter_webrtc/webrtc.dart';
 typedef void OnMediaStream(MediaStream mediaStream);
 
 Future<String> createRoom() async {
-  // dart:io based code
-  /*var request = await HttpClient().getUrl(Uri.parse('http://localhost:8888/createRoom'));
-  var response = await request.close();
-  return response.transform(utf8.decoder).join();*/
-  return html.HttpRequest.getString('https://signal.prod.f2f.gorence.io/createRoom');
+  return html.HttpRequest.getString('https://signal.f2f.example.com/createRoom');
 }
 
 class RtcClient {
@@ -32,7 +28,7 @@ class RtcClient {
   Future<void> join(String roomId) async {
     _localStream = await _createLocalStream();
 
-    _signalWs = new html.WebSocket('wss://signal.prod.f2f.gorence.io/ws?roomId=$roomId');
+    _signalWs = new html.WebSocket('wss://signal.f2f.example.com/ws?roomId=$roomId');
     _signalWs.onMessage.listen(_onSignalMessage);
 
     _peerConnection = await createPeerConnection({
