@@ -1,16 +1,8 @@
 # f2f
+f2f (face2face) is a basic video chat application built using Flutter and WebRTC. It uses a fork of the flutter-webrtc plugin, available [here](https://github.com/lgorence/flutter-webrtc).
 
-A new Flutter project.
+## Is there a public instance available?
+Not at the moment. I did have it hosted on my home network, but this was only for testing with friends and family. It doesn't take much to host (because the only requirements are a web server and a simple WebSocket signaling server), so if anyone were to set it up, it could easily be done on a $5/month DigitalOcean droplet.
 
-## Getting Started
-
-This project is a starting point for a Flutter application.
-
-A few resources to get you started if this is your first Flutter project:
-
-- [Lab: Write your first Flutter app](https://flutter.dev/docs/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://flutter.dev/docs/cookbook)
-
-For help getting started with Flutter, view our
-[online documentation](https://flutter.dev/docs), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## How would I set one up?
+Install Dart, copy the signaling server script over, run that. Then you'll need to find the URLs in the Flutter source code that refer to where to connect to the signal server (left as an exercise to the reader). Build for web and deploy to the web server of your choice with HTTPS (you'll need this, as far as I know, most if not all web browsers require HTTPS on non-localhost hosts).
